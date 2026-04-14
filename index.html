@@ -4,6 +4,7 @@ title: index
 permalink: /
 ---
 
+<!--
 <div class="navbar-wrapper">
   <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
@@ -66,3 +67,524 @@ iframe {
 }
 </style>
 <!-- <iframe src="https://www.maimemo.com/share/page/?uid=779139&pid=660" style="display: none;"></iframe> -->
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="一心歸命">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7F77DD">
+<title>一心歸命 · 念佛計數</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #7F77DD;
+    --purple-light: #EEEDFE;
+    --purple-dark: #534AB7;
+    --coral: #D85A30;
+    --teal: #1D9E75;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+    --text-hint: #999;
+    --bg: #f8f7fc;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text-primary: #f0effe;
+      --text-secondary: #b0acdd;
+      --text-hint: #8880cc;
+      --bg: #12101e;
+      --surface: #1e1a30;
+      --border: rgba(255,255,255,0.1);
+    }
+  }
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px);
+    padding-top: max(env(safe-area-inset-top), 24px);
+  }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 24px; padding-top: 8px; }
+  .lotus { font-size: 40px; display: block; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .title { font-size: 30px; font-weight: 600; letter-spacing: 8px; color: var(--text-primary); }
+  .subtitle { font-size: 13px; color: var(--text-hint); letter-spacing: 3px; margin-top: 6px; }
+
+  /* Mode toggle */
+  .mode-toggle {
+    display: flex; gap: 8px; margin-bottom: 28px;
+    background: var(--surface); border-radius: 50px;
+    padding: 4px; border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(127,119,221,0.1);
+  }
+  .mode-btn {
+    padding: 8px 18px; font-size: 13px; border: none;
+    border-radius: 50px; background: transparent;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all 0.25s; font-family: inherit; letter-spacing: 1px;
+  }
+  .mode-btn.active {
+    background: var(--purple); color: white;
+    box-shadow: 0 2px 8px rgba(127,119,221,0.4);
+  }
+
+  /* Counter ring */
+  .counter-wrap { position: relative; width: 240px; height: 240px; margin: 0 auto 24px; }
+  .counter-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .ring-progress {
+    fill: none; stroke: var(--purple); stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 659;
+    stroke-dashoffset: 659;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.4,0,0.2,1);
+    filter: drop-shadow(0 0 6px rgba(127,119,221,0.5));
+  }
+  .ring-glow {
+    fill: none; stroke: var(--purple); stroke-width: 2; opacity: 0.2;
+    stroke-dasharray: 659; stroke-dashoffset: 659;
+  }
+  .counter-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .count-num {
+    font-size: 72px; font-weight: 300;
+    color: var(--text-primary); line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: transform 0.1s;
+  }
+  .count-num.bump { transform: scale(1.15); }
+  .count-label { font-size: 13px; color: var(--text-hint); margin-top: 4px; letter-spacing: 2px; }
+  .amitabha-text {
+    font-size: 14px; color: var(--purple);
+    margin-top: 8px; letter-spacing: 3px; font-weight: 500;
+    transition: opacity 0.3s;
+  }
+
+  /* Status */
+  .status-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; min-height: 44px; margin-bottom: 20px;
+  }
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .status-dot.listening { background: var(--teal); animation: pulse 1.2s infinite; }
+  .status-dot.detected { background: var(--purple); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+  .status-text { font-size: 14px; color: var(--text-secondary); }
+  .wave { display: flex; gap: 3px; align-items: center; height: 20px; }
+  .wave-bar {
+    width: 3px; border-radius: 2px;
+    background: var(--purple); height: 4px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .wave-bar.active {
+    opacity: 1;
+    animation: wave-anim 0.7s ease-in-out infinite;
+  }
+  .wave-bar:nth-child(1){animation-delay:0s}
+  .wave-bar:nth-child(2){animation-delay:0.1s}
+  .wave-bar:nth-child(3){animation-delay:0.2s}
+  .wave-bar:nth-child(4){animation-delay:0.15s}
+  .wave-bar:nth-child(5){animation-delay:0.05s}
+  @keyframes wave-anim { 0%,100%{height:4px} 50%{height:18px} }
+
+  /* Error */
+  .error-area { min-height: 20px; text-align: center; margin-bottom: 8px; }
+  .error-msg {
+    font-size: 12px; color: var(--coral);
+    background: rgba(216,90,48,0.08);
+    border-radius: 8px; padding: 8px 14px;
+    max-width: 300px; line-height: 1.6;
+  }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+  .btn-circle {
+    border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.12s, box-shadow 0.2s;
+    font-family: inherit; font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-circle:active { transform: scale(0.92); }
+  .btn-mic {
+    width: 80px; height: 80px; font-size: 28px;
+    background: var(--purple); color: white;
+    box-shadow: 0 4px 20px rgba(127,119,221,0.45);
+  }
+  .btn-mic.recording {
+    background: var(--coral);
+    box-shadow: 0 4px 20px rgba(216,90,48,0.45);
+    animation: rec-pulse 2s infinite;
+  }
+  @keyframes rec-pulse { 0%,100%{box-shadow:0 4px 20px rgba(216,90,48,0.45)} 50%{box-shadow:0 4px 28px rgba(216,90,48,0.7)} }
+  .btn-manual {
+    width: 60px; height: 60px; font-size: 20px;
+    background: var(--surface); color: var(--purple);
+    border: 1.5px solid var(--purple);
+    box-shadow: 0 2px 10px rgba(127,119,221,0.15);
+  }
+  .btn-reset {
+    width: 60px; height: 60px; font-size: 22px;
+    background: var(--surface); color: var(--text-secondary);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .manual-hint { font-size: 11px; color: var(--text-hint); text-align: center; letter-spacing: 0.5px; margin-bottom: 24px; }
+
+  /* Stats */
+  .stats-row {
+    display: flex; gap: 12px; width: 100%; max-width: 360px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    flex: 1; background: var(--surface);
+    border-radius: var(--radius); padding: 16px 8px;
+    text-align: center; border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .stat-num { font-size: 24px; font-weight: 500; color: var(--text-primary); }
+  .stat-label { font-size: 11px; color: var(--text-hint); margin-top: 4px; letter-spacing: 1.5px; }
+
+  /* 108 milestone */
+  .milestone {
+    display: none; text-align: center; margin-bottom: 16px;
+    background: var(--purple-light); border-radius: 12px;
+    padding: 10px 20px; color: var(--purple-dark);
+    font-size: 14px; letter-spacing: 2px;
+    animation: fadein 0.5s;
+  }
+  @keyframes fadein { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+  /* Flash overlay */
+  .flash-overlay {
+    position: fixed; inset: 0;
+    background: rgba(127,119,221,0.07);
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  /* Install hint for iOS */
+  .install-hint {
+    font-size: 11px; color: var(--text-hint);
+    text-align: center; line-height: 1.7;
+    max-width: 280px; padding: 10px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="lotus">🪷</span>
+  <div class="title">一心歸命</div>
+  <div class="subtitle">念佛計數 · 專注修行</div>
+</div>
+
+<div class="mode-toggle">
+  <button class="mode-btn active" id="btn4" onclick="setMode(4)">四字　阿彌陀佛</button>
+  <button class="mode-btn" id="btn6" onclick="setMode(6)">六字　南無阿彌陀佛</button>
+</div>
+
+<div class="counter-wrap">
+  <svg width="240" height="240" viewBox="0 0 240 240">
+    <circle class="ring-bg" cx="120" cy="120" r="105"/>
+    <circle class="ring-glow" cx="120" cy="120" r="105" id="ring-glow"/>
+    <circle class="ring-progress" cx="120" cy="120" r="105" id="ring-progress"/>
+  </svg>
+  <div class="counter-center">
+    <div class="count-num" id="count-display">0</div>
+    <div class="count-label">聲</div>
+    <div class="amitabha-text" id="amitabha-label">阿彌陀佛</div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot" id="status-dot"></div>
+  <div class="status-text" id="status-text">點擊麥克風開始</div>
+  <div class="wave">
+    <div class="wave-bar" id="w1"></div>
+    <div class="wave-bar" id="w2"></div>
+    <div class="wave-bar" id="w3"></div>
+    <div class="wave-bar" id="w4"></div>
+    <div class="wave-bar" id="w5"></div>
+  </div>
+</div>
+
+<div class="error-area" id="error-area"></div>
+
+<div class="milestone" id="milestone">🙏 已念滿 108 聲，功德圓滿！</div>
+
+<div class="controls">
+  <button class="btn-circle btn-manual" onclick="manualCount()" title="手動加一">+1</button>
+  <button class="btn-circle btn-mic" id="mic-btn" onclick="toggleListening()">🎙️</button>
+  <button class="btn-circle btn-reset" onclick="resetCount()" title="重置">↺</button>
+</div>
+<div class="manual-hint">可手動點擊 +1，或使用麥克風語音辨識</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num" id="session-count">0</div>
+    <div class="stat-label">本次</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="total-count">0</div>
+    <div class="stat-label">累計</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num" id="timer-display">0:00</div>
+    <div class="stat-label">時長</div>
+  </div>
+</div>
+
+<div class="install-hint" id="install-hint" style="display:none">
+  📱 iPhone 用戶：點擊 Safari 分享按鈕 → 「加入主畫面」<br>即可像 App 一樣使用
+</div>
+
+<div class="flash-overlay" id="flash"></div>
+
+<script>
+const CIRC = 2 * Math.PI * 105;
+let count = 0;
+let totalCount = parseInt(localStorage.getItem('amitabha_total') || '0');
+let mode = 4;
+let isListening = false;
+let recognition = null;
+let timerInterval = null;
+let seconds = 0;
+let lastDetectedTime = 0;
+let milestoneShown = {};
+
+document.getElementById('total-count').textContent = totalCount;
+
+// Show iOS install hint
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.navigator.standalone;
+if (isIOS && !isStandalone) {
+  document.getElementById('install-hint').style.display = 'block';
+}
+
+// Keep screen awake (where supported)
+let wakeLock = null;
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn4').classList.toggle('active', m === 4);
+  document.getElementById('btn6').classList.toggle('active', m === 6);
+  document.getElementById('amitabha-label').textContent = m === 4 ? '阿彌陀佛' : '南無阿彌陀佛';
+}
+
+function updateRing() {
+  const progress = Math.min(count / 108, 1);
+  const offset = CIRC * (1 - progress);
+  document.getElementById('ring-progress').style.strokeDashoffset = offset;
+  document.getElementById('ring-progress').style.strokeDasharray = CIRC;
+  document.getElementById('ring-glow').style.strokeDashoffset = offset;
+  document.getElementById('ring-glow').style.strokeDasharray = CIRC;
+}
+
+function checkMilestone() {
+  if (count > 0 && count % 108 === 0 && !milestoneShown[count]) {
+    milestoneShown[count] = true;
+    const el = document.getElementById('milestone');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+}
+
+function updateDisplay() {
+  document.getElementById('count-display').textContent = count;
+  document.getElementById('session-count').textContent = count;
+  document.getElementById('total-count').textContent = totalCount;
+  updateRing();
+  checkMilestone();
+}
+
+function bumpAnimation() {
+  const el = document.getElementById('count-display');
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 120);
+}
+
+function flashDetected() {
+  const el = document.getElementById('flash');
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 180);
+  const dot = document.getElementById('status-dot');
+  dot.classList.add('detected');
+  setTimeout(() => dot.classList.remove('detected'), 400);
+  bumpAnimation();
+}
+
+function manualCount() {
+  count++;
+  totalCount++;
+  localStorage.setItem('amitabha_total', totalCount);
+  updateDisplay();
+  flashDetected();
+  if (!timerInterval) {
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+}
+
+function resetCount() {
+  if (count === 0) return;
+  if (confirm('確定要重置本次計數嗎？累計數量不受影響。')) {
+    count = 0;
+    milestoneShown = {};
+    seconds = 0;
+    document.getElementById('timer-display').textContent = '0:00';
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    updateDisplay();
+  }
+}
+
+function updateTimer() {
+  seconds++;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  document.getElementById('timer-display').textContent = m + ':' + String(s).padStart(2, '0');
+}
+
+function setWave(active) {
+  ['w1','w2','w3','w4','w5'].forEach(id => {
+    document.getElementById(id).classList.toggle('active', active);
+  });
+}
+
+function detectAmitabha(text) {
+  const t = text.replace(/\s/g, '');
+  const patterns4 = ['阿彌陀佛','阿弥陀佛','amituofo','amitufo','amitabha'];
+  const patterns6 = ['南無阿彌陀佛','南无阿弥陀佛','namoamituofo','namoamitabha','namamituofo'];
+  const all = mode === 6 ? [...patterns6, ...patterns4] : patterns4;
+  let found = 0;
+  for (const p of all) {
+    let idx = 0, tl = t.toLowerCase();
+    const pl = p.toLowerCase();
+    while ((idx = tl.indexOf(pl, idx)) !== -1) { found++; idx += pl.length; }
+  }
+  return found;
+}
+
+function toggleListening() {
+  isListening ? stopListening() : startListening();
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('error-area').innerHTML =
+      '<div class="error-msg">⚠️ 您的瀏覽器不支援語音辨識<br>建議使用 Chrome 或 Edge，或改用手動 +1 計數</div>';
+    return;
+  }
+  try {
+    recognition = new SR();
+    recognition.lang = 'zh-TW';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
+
+    recognition.onstart = () => {
+      isListening = true;
+      document.getElementById('mic-btn').classList.add('recording');
+      document.getElementById('mic-btn').textContent = '⏹️';
+      document.getElementById('status-dot').classList.add('listening');
+      document.getElementById('status-text').textContent = '正在聆聽念佛聲...';
+      setWave(true);
+      document.getElementById('error-area').innerHTML = '';
+      if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
+      requestWakeLock();
+    };
+
+    recognition.onresult = (e) => {
+      let final = '', interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        e.results[i].isFinal ? (final += t) : (interim += t);
+      }
+      const text = final || interim;
+      if (!text) return;
+      const now = Date.now();
+      if (now - lastDetectedTime < 700) return;
+      const n = detectAmitabha(text);
+      if (n > 0) {
+        lastDetectedTime = now;
+        count += n;
+        totalCount += n;
+        localStorage.setItem('amitabha_total', totalCount);
+        updateDisplay();
+        flashDetected();
+        document.getElementById('status-text').textContent = '辨識：' + (mode === 4 ? '阿彌陀佛' : '南無阿彌陀佛');
+      }
+    };
+
+    recognition.onerror = (e) => {
+      if (e.error === 'not-allowed') {
+        document.getElementById('error-area').innerHTML =
+          '<div class="error-msg">⚠️ 請允許麥克風權限後再試</div>';
+        stopListening();
+      }
+    };
+
+    recognition.onend = () => {
+      if (isListening) { try { recognition.start(); } catch(e) {} }
+    };
+
+    recognition.start();
+  } catch(e) {
+    document.getElementById('error-area').innerHTML =
+      '<div class="error-msg">⚠️ 無法啟動語音辨識，請使用手動 +1 計數</div>';
+  }
+}
+
+function stopListening() {
+  isListening = false;
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  document.getElementById('mic-btn').classList.remove('recording');
+  document.getElementById('mic-btn').textContent = '🎙️';
+  document.getElementById('status-dot').classList.remove('listening');
+  document.getElementById('status-text').textContent = '已暫停，點擊繼續';
+  setWave(false);
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+
+// Prevent double-tap zoom on iOS
+document.addEventListener('touchend', e => {
+  if (e.target.tagName === 'BUTTON') e.preventDefault();
+}, { passive: false });
+
+updateDisplay();
+</script>
+</body>
+</html>
